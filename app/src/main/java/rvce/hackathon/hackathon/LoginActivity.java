@@ -1,13 +1,13 @@
 package rvce.hackathon.hackathon;
 
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -24,8 +24,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
-
 import butterknife.BindView;
+import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener,GoogleApiClient.OnConnectionFailedListener{
@@ -35,6 +35,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private FirebaseAuth mAuth;
     private GoogleApiClient mGoogleApiClient;
     int RC_SIGN_IN=1;
+    ProgressDialog progressDialog;
     @BindView(R.id.emailEt)EditText emailEt;
     @BindView(R.id.passwordEt) EditText passwordEt;
 
@@ -45,6 +46,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        ButterKnife.bind(this);
+        progressDialog=new ProgressDialog(this);
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken("932697641951-tfjhul8t3h4te1ua8bieqh8df7msbpeg.apps.googleusercontent.com")
@@ -78,13 +81,20 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             case R.id.forgotPwdTv:
                 break;
             case R.id.signInBtn:
+                progressDialog.setMessage("Signing in...");
+                progressDialog.show();
                 signInWithEmailAndPassword(emailEt.getText().toString(),passwordEt.getText().toString());
+                progressDialog.dismiss();
                 break;
             case R.id.googleSignInBtn:
+                progressDialog.setMessage("Signing in...");
+                progressDialog.show();
                 Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
                 startActivityForResult(signInIntent, RC_SIGN_IN);
+                progressDialog.dismiss();
                 break;
             case R.id.createAccTv:
+                startActivity(new Intent(this,SignUpActivity.class));
                 break;
         }
     }
@@ -92,9 +102,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private void signInWithEmailAndPassword(String email, String password) {
         if(email.isEmpty()){
             emailEt.setError("Please enter Email");
+            return;
         }
         if(password.isEmpty()){
-
+            passwordEt.setError("Please Enter Password");
+            return;
         }
 
         mAuth.signInWithEmailAndPassword(email, password)
@@ -109,6 +121,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         if (!task.isSuccessful()) {
                             Log.w(TAG, "signInWithEmail:failed", task.getException());
                             Toast.makeText(LoginActivity.this,"Failed",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                        else {
+                            Log.d(TAG,"SUCCESSFUL LOGIN");
+                            Toast.makeText(LoginActivity.this,"User "+task.getResult().getUser().getDisplayName(),
                                     Toast.LENGTH_SHORT).show();
                         }
 
@@ -143,16 +160,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 GoogleSignInAccount account = result.getSignInAccount();
                 firebaseAuthWithGoogle(account);
             } else {
-                Dialog dialog=new Dialog(this);
-                //dialog.setCancelable(true);
-                dialog.setTitle("Sign in Failed!");
-                dialog.setCanceledOnTouchOutside(true);
-                dialog.show();
+                Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show();
                 // Google Sign In failed, update UI appropriately
                 // ...
             }
         }
     }
+
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
         Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
 
@@ -171,11 +185,15 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
                         }
+                        else{
+                            Log.d(TAG,"SUCCESSFUL LOGIN");
+                            Toast.makeText(LoginActivity.this,"User "+task.getResult().getUser().getDisplayName(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
                         // ...
                     }
                 });
     }
-
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
