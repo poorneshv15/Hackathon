@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Hackathon</string>
+    <string-array name="city">
+        <item>Bangalore</item>
+        <item>Coorg</item>
+        <item>Ladakh</item>
+    </string-array>
 </resources>
