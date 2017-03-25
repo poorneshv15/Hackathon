@@ -7,6 +7,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
@@ -23,6 +25,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
+import butterknife.BindView;
+import butterknife.OnClick;
+
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener,GoogleApiClient.OnConnectionFailedListener{
 
 
@@ -30,6 +35,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private FirebaseAuth mAuth;
     private GoogleApiClient mGoogleApiClient;
     int RC_SIGN_IN=1;
+    @BindView(R.id.emailEt)EditText emailEt;
+    @BindView(R.id.passwordEt) EditText passwordEt;
+
+
     String TAG="LoginActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,13 +71,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         };
     }
 
+    @OnClick({R.id.signInBtn,R.id.googleSignInBtn,R.id.forgotPwdTv,R.id.createAccTv})
     @Override
     public void onClick(View v) {
         switch(v.getId()){
             case R.id.forgotPwdTv:
                 break;
             case R.id.signInBtn:
-                //signInWithEmailAndPassword(String "")
+                signInWithEmailAndPassword(emailEt.getText().toString(),passwordEt.getText().toString());
                 break;
             case R.id.googleSignInBtn:
                 Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
@@ -77,6 +87,34 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             case R.id.createAccTv:
                 break;
         }
+    }
+
+    private void signInWithEmailAndPassword(String email, String password) {
+        if(email.isEmpty()){
+            emailEt.setError("Please enter Email");
+        }
+        if(password.isEmpty()){
+
+        }
+
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
+
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        if (!task.isSuccessful()) {
+                            Log.w(TAG, "signInWithEmail:failed", task.getException());
+                            Toast.makeText(LoginActivity.this,"Failed",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+
+                        // ...
+                    }
+                });
     }
 
     @Override
